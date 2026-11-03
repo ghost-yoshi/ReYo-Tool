@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "kind": "structure",
+  "meta": {
+    "matiere": "MongoDB",
+    "titre": "TP MongoDB : Conception et Administration d'une Solution Financière",
+    "enseignant": "Mr Fouby",
+    "code_ue": 331
+  },
+  "regles_rendu": {
+    "entete": ["nom", "prenom", "matricule", "filiere", "groupe", "date_seance"],
+    "format": "pdf"
+  },
+  "noeuds": [
+    {
+      "id": "P4",
+      "type": "section",
+      "enonce": "Requêtes d'exploitation et de support technique",
+      "enfants": [
+        {
+          "id": "P4.3",
+          "type": "consigne",
+          "enonce": "Identifier les soldes inférieurs à 5 000 FCFA",
+          "attendu": ["commande", "capture"]
+        }
+      ]
+    }
+  ]
+}
