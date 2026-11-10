@@ -22,7 +22,7 @@ class _Base(BaseModel):
 
 class Meta(_Base):
     matiere: str
-    code_ue: int
+    code_ue: str
     titre: str
     enseignant: str | None = None
 

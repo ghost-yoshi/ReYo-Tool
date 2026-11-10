@@ -2,7 +2,11 @@ from dataclasses import dataclass, replace
 from io import BytesIO
 from uuid import uuid4
 from PIL import Image, UnidentifiedImageError
+"""
 
+implémentatoin de la classe capture. la méthode principale est depuis octetes qui utilise imageAnalyzer pour identifier l'image sinon leve une exception.
+
+"""
 
 FORMATS_ACCEPTES = {"PNG": "png", "JPEG": "jpeg", "WEBP": "webp"}
 TAILLE_MAX = 10 * 1024 * 1024  # 10 Mo
@@ -23,7 +27,7 @@ def _imageAnalyzer(octets: bytes) -> tuple[str, int, int]:
             raw_format = img.format
             largeur, hauteur = img.size
     except UnidentifiedImageError as e :
-        raise CaptureInvalide("FORMAT_NON_SUPPORTEE", "ce fichier n'est pas pas une image reconnu")
+        raise CaptureInvalide("FORMAT_NON_SUPPORTE", "ce fichier n'est pas pas une image reconnu")
     except OSError as e :
         raise CaptureInvalide("IMAGE_ILLISIBLE", "l'image semble corrompue.") from e
 
@@ -71,7 +75,11 @@ if __name__ == "__main__":
     octets = open("capture.png", "rb").read()   # côté CLI, pas dans le cœur
     c = Capture.depuis_octets("P4.4.3", octets, "Résultat du filtre")
 
-    c.largeur                  # lu depuis l'image
-    c.extension                # "png"
-    c2 = c.with_legend("Autre légende")   # nouvelle capture, c inchangée
-    c.legend = "x"            # FrozenInstanceError
+    c.largeur                  
+    c.extension                
+    c2 = c.with_legend("Autre légende")   
+
+    print(c.largeur, c.hauteur, c.format, c)
+    #c.legend = "x"            # FrozenInstanceError
+
+    print

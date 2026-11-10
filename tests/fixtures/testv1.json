@@ -1,0 +1,274 @@
+{
+  "schema_version": 1,
+  "kind": "structure",
+  "meta": {
+    "matiere": "E-Commerce",
+    "code_ue": "GI 343",
+    "titre": "Compte rendu du TP fil rouge : Conception d'une plateforme marchande web (PHP 8 MVC, MySQL 3NF, Paiement Mobile Money avec Webhooks HMAC-SHA256)",
+    "enseignant": null
+  },
+  "regles_rendu": {
+    "entete": [
+      "République du Cameroun - Ministère de l'Enseignement Supérieur",
+      "Université de Douala - Institut Universitaire de Technologie",
+      "IUT de Douala - Département de Génie Informatique",
+      "GI2 (BAC+2) - UE GI 343 : E-Commerce"
+    ],
+    "format": "docx",
+    "filename": "compte_rendu_tp_fil_rouge_ecommerce_gi343"
+  },
+  "noeuds": [
+    {
+      "id": "1",
+      "type": "section",
+      "enonce": "Ordre du jour et contexte institutionnel",
+      "attendu": [],
+      "enfants": [
+        {
+          "id": "1.1",
+          "type": "info",
+          "enonce": "Le présent compte rendu porte sur la fiche de travaux pratiques « fil rouge » de l'unité d'enseignement GI 343 (E-Commerce), dispensée au Département de Génie Informatique de l'IUT de Douala (Université de Douala) en classe de GI2 (BAC+2). Il présente successivement le contexte et les objectifs du TP, l'architecture technique exigée, le calendrier des quatre jalons, les scénarios de validation obligatoires à la soutenance, le barème d'évaluation, ainsi que le plan d'action et les points ouverts.",
+          "attendu": [],
+          "enfants": []
+        },
+        {
+          "id": "1.2",
+          "type": "info",
+          "enonce": "Cadre organisationnel : le projet est réalisé en groupes de 2 à 3 étudiants, sur une durée totale de 3 semaines en mode intensif. Le lancement est fixé au 18 octobre 2026 et le livrable final est attendu le 6 novembre 2026.",
+          "attendu": [],
+          "enfants": []
+        },
+        {
+          "id": "1.3",
+          "type": "info",
+          "enonce": "Finalité pédagogique : ce TP met en application les concepts clés du cours et des évaluations théoriques de GI 343 dans le cadre d'un projet d'ingénierie logicielle e-commerce complet. Les équipes doivent concevoir et développer une application marchande sécurisée, adaptée au contexte économique camerounais, notamment par l'usage du paiement Mobile Money.",
+          "attendu": [],
+          "enfants": []
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "type": "section",
+      "enonce": "Objectifs pédagogiques et architecture technique exigée",
+      "attendu": [],
+      "enfants": [
+        {
+          "id": "2.1",
+          "type": "consigne",
+          "enonce": "Architecture backend : l'application doit être développée en PHP 8 ou supérieur, structurée selon le modèle MVC (Modèle-Vue-Contrôleur) ou sous forme d'API REST native, sans recours à un framework lourd. La séparation nette des trois couches (accès aux données, logique de traitement, présentation) constitue un critère d'évaluation explicite.",
+          "attendu": ["texte"],
+          "enfants": []
+        },
+        {
+          "id": "2.2",
+          "type": "consigne",
+          "enonce": "Base de données : le système de gestion utilisé est MySQL ou MariaDB, accédé via PDO. Le schéma doit respecter strictement la 3e Forme Normale (3NF). Une exigence spécifique s'impose : le prix unitaire d'achat doit être enregistré dans la table LIGNE_COMMANDE afin de préserver l'historique des transactions, même si le prix du produit est modifié ultérieurement dans le catalogue.",
+          "attendu": ["texte"],
+          "enfants": []
+        },
+        {
+          "id": "2.3",
+          "type": "consigne",
+          "enonce": "Paiement Mobile Money et Webhooks : l'équipe doit intégrer la Sandbox d'un agrégateur local au choix (Campay, Monetbil ou CinetPay). Le flux asynchrone se déroule en deux temps : d'abord l'initiation d'un Push USSD qui place la transaction au statut PENDING, puis la réception d'un Webhook HTTP POST dont l'authenticité est vérifiée par une signature cryptographique HMAC-SHA256.",
+          "attendu": ["texte"],
+          "enfants": []
+        },
+        {
+          "id": "2.4",
+          "type": "consigne",
+          "enonce": "Sécurité et performance : l'application doit être protégée contre les injections SQL grâce aux requêtes préparées PDO, servie en HTTPS/SSL, et optimisée par la conversion des images produits au format WebP, avec une réduction attendue de 30 à 50 % du poids des fichiers.",
+          "attendu": ["texte"],
+          "enfants": []
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "type": "section",
+      "enonce": "Jalons et étapes clés du projet (18 octobre - 6 novembre 2026)",
+      "attendu": [],
+      "enfants": [
+        {
+          "id": "3.1",
+          "type": "info",
+          "enonce": "Jalon 1 - Vendredi 23 octobre 2026 (J+5) : Analyse, UX/UI et modélisation de la base de données. Les travaux comprennent une maquette Figma responsive conçue selon l'approche mobile-first, des diagrammes UML (cas d'utilisation intégrant le paiement par une relation <<include>>, et diagramme de séquence), ainsi qu'un MCD/MLD en 3NF avec historisation du prix unitaire dans LIGNE_COMMANDE. Livrables attendus : le lien Figma, le dossier Merise/UML et le script SQL de la base de données.",
+          "attendu": ["texte", "capture"],
+          "enfants": []
+        },
+        {
+          "id": "3.2",
+          "type": "info",
+          "enonce": "Jalon 2 - Mercredi 28 octobre 2026 (J+5) : Backend MVC, catalogue et panier. Les travaux comprennent le squelette PHP 8 MVC (routeur, contrôleurs, modèles), un catalogue dynamique avec filtres et images WebP, ainsi que la gestion du panier en session avec requêtes préparées PDO contre les injections SQL. Livrables attendus : le code source MVC, la base de données alimentée et une démonstration du catalogue et du panier.",
+          "attendu": ["texte", "commande", "capture"],
+          "enfants": []
+        },
+        {
+          "id": "3.3",
+          "type": "info",
+          "enonce": "Jalon 3 - Dimanche 1er novembre 2026 (J+4) : Passerelle Mobile Money et Webhooks. Les travaux comprennent la connexion à l'API Sandbox Mobile Money (MTN/Orange via un agrégateur), le traitement de l'état PENDING lié au Push USSD, et un script Webhook de notification asynchrone sécurisé par signature HMAC-SHA256. Livrables attendus : le connecteur API, le script Webhook et les logs de test Sandbox.",
+          "attendu": ["texte", "commande", "capture"],
+          "enfants": []
+        },
+        {
+          "id": "3.4",
+          "type": "info",
+          "enonce": "Jalon 4 - Vendredi 6 novembre 2026 (J+5) : Legal Tech, marketing et déploiement. Les travaux comprennent la relance des paniers abandonnés (e-mail ou WhatsApp) avec un module de recommandation, la conformité à la Loi 2010/012 (mentions légales, droit de retour de 7 jours) et à la Loi 2024/017 (recueil du consentement), ainsi que le déploiement en ligne sous HTTPS/SSL. Livrables attendus : le site en ligne (URL), le rapport final (40 pages maximum) et la matrice Gantt/tâches.",
+          "attendu": ["texte", "capture"],
+          "enfants": []
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "type": "section",
+      "enonce": "Scénarios de validation obligatoires à la soutenance",
+      "attendu": [],
+      "enfants": [
+        {
+          "id": "4.1",
+          "type": "cas",
+          "enonce": "Test 1 - Intégrité des prix historiques : une commande est passée, puis le prix du produit concerné est modifié depuis le panneau d'administration. Le montant total de la commande déjà enregistrée doit demeurer strictement inchangé dans LIGNE_COMMANDE, ce qui démontre la bonne historisation du prix unitaire d'achat.",
+          "attendu": ["capture", "commande"],
+          "enfants": []
+        },
+        {
+          "id": "4.2",
+          "type": "cas",
+          "enonce": "Test 2 - Sécurité cryptographique du Webhook Mobile Money : une fausse requête HTTP POST, portant une signature HMAC falsifiée, est envoyée au Webhook. L'application doit la rejeter par une réponse HTTP 401 ou 403 et ne valider la commande que si la signature HMAC-SHA256 correspond à la clé secrète (Secret Key) de l'agrégateur.",
+          "attendu": ["capture", "commande"],
+          "enfants": []
+        },
+        {
+          "id": "4.3",
+          "type": "cas",
+          "enonce": "Test 3 - Résistance aux injections SQL : la chaîne ' OR '1'='1 est saisie dans le champ de recherche du catalogue. L'application doit la traiter comme une chaîne littérale, sans altération de la requête SQL, grâce à l'emploi des requêtes préparées PDO.",
+          "attendu": ["capture", "commande"],
+          "enfants": []
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "type": "section",
+      "enonce": "Barème d'évaluation (sur 20 points)",
+      "attendu": [],
+      "enfants": [
+        {
+          "id": "5.1",
+          "type": "info",
+          "enonce": "Critère 1 - BDD 3NF et architecture MVC (4,0 points) : respect strict de la 3NF, historisation des prix dans LIGNE_COMMANDE et séparation propre des couches Modèle-Vue-Contrôleur.",
+          "attendu": [],
+          "enfants": []
+        },
+        {
+          "id": "5.2",
+          "type": "info",
+          "enonce": "Critère 2 - Intégration Mobile Money et Webhook (5,0 points) : gestion des flux Push USSD (statut PENDING), validation asynchrone par Webhook et contrôle de la signature HMAC-SHA256. Il s'agit du critère le plus fortement pondéré.",
+          "attendu": [],
+          "enfants": []
+        },
+        {
+          "id": "5.3",
+          "type": "info",
+          "enonce": "Critère 3 - Sécurité applicative et performance (3,5 points) : requêtes préparées PDO contre les injections SQL, sessions sécurisées, optimisation des images WebP et certificat HTTPS/SSL.",
+          "attendu": [],
+          "enfants": []
+        },
+        {
+          "id": "5.4",
+          "type": "info",
+          "enonce": "Critère 4 - Legal Tech et marketing e-commerce (2,5 points) : mentions légales obligatoires (Loi 2010/012), gestion du consentement (Loi 2024/017) et module de relance des paniers abandonnés.",
+          "attendu": [],
+          "enfants": []
+        },
+        {
+          "id": "5.5",
+          "type": "info",
+          "enonce": "Critère 5 - Ergonomie UX/UI et mobile-first (2,0 points) : originalité de la maquette Figma, design responsive pour mobile, fluidité du parcours client et du processus de paiement (checkout).",
+          "attendu": [],
+          "enfants": []
+        },
+        {
+          "id": "5.6",
+          "type": "info",
+          "enonce": "Critère 6 - Documentation et apport individuel (3,0 points) : rapport final de 40 pages maximum, matrice des responsabilités par membre, diagramme de Gantt et démonstration orale.",
+          "attendu": [],
+          "enfants": []
+        }
+      ]
+    },
+    {
+      "id": "6",
+      "type": "section",
+      "enonce": "Décisions et plan d'action",
+      "attendu": [],
+      "enfants": [
+        {
+          "id": "6.1",
+          "type": "consigne",
+          "enonce": "Constituer les groupes de 2 à 3 étudiants dès le lancement du 18 octobre 2026 et répartir les responsabilités de chaque membre, afin d'alimenter la matrice des responsabilités et de justifier l'apport individuel évalué au critère 6.",
+          "attendu": ["texte"],
+          "enfants": []
+        },
+        {
+          "id": "6.2",
+          "type": "consigne",
+          "enonce": "Planifier le travail à rebours à partir des quatre échéances (23 octobre, 28 octobre, 1er novembre, 6 novembre 2026) et tenir à jour la matrice Gantt/tâches tout au long du projet, de sorte qu'elle reflète l'avancement réel de chaque groupe.",
+          "attendu": ["texte"],
+          "enfants": []
+        },
+        {
+          "id": "6.3",
+          "type": "consigne",
+          "enonce": "Préparer en amont de la soutenance les trois scénarios de validation obligatoires (intégrité des prix, rejet d'un Webhook falsifié, résistance à l'injection SQL) en les rendant reproductibles en démonstration, et conserver les logs et captures qui les attestent.",
+          "attendu": ["texte", "capture"],
+          "enfants": []
+        },
+        {
+          "id": "6.4",
+          "type": "consigne",
+          "enonce": "Choisir l'agrégateur de paiement (Campay, Monetbil ou CinetPay) avant le Jalon 3, obtenir les accès Sandbox et la clé secrète nécessaire à la vérification HMAC-SHA256, puis déployer le site en HTTPS/SSL pour la remise finale du 6 novembre 2026.",
+          "attendu": ["texte", "commande"],
+          "enfants": []
+        }
+      ]
+    },
+    {
+      "id": "7",
+      "type": "section",
+      "enonce": "Points ouverts",
+      "attendu": [],
+      "enfants": [
+        {
+          "id": "7.1",
+          "type": "question",
+          "enonce": "Le document ne précise pas quel agrégateur de paiement (Campay, Monetbil ou CinetPay) est recommandé ou imposé, ni les modalités d'obtention des accès Sandbox : ce choix relève-t-il librement de chaque groupe ?",
+          "attendu": [],
+          "enfants": []
+        },
+        {
+          "id": "7.2",
+          "type": "question",
+          "enonce": "Les modalités pratiques de la soutenance (date, durée, composition du jury, format de la démonstration orale) ne sont pas indiquées dans la fiche et devront être confirmées par l'enseignant.",
+          "attendu": [],
+          "enfants": []
+        },
+        {
+          "id": "7.3",
+          "type": "question",
+          "enonce": "Les canaux de remise des livrables intermédiaires (plateforme, dépôt Git, e-mail) et le mode d'hébergement attendu pour le déploiement HTTPS/SSL ne sont pas définis. Une clarification est nécessaire, en particulier pour l'obtention d'un certificat et d'un nom de domaine.",
+          "attendu": [],
+          "enfants": []
+        },
+        {
+          "id": "7.4",
+          "type": "question",
+          "enonce": "Le nom de l'enseignant responsable de l'UE GI 343 n'apparaît pas dans la fiche. L'attribution du travail de relance des paniers abandonnés (e-mail ou WhatsApp) et le périmètre exact du module de recommandation restent également à préciser.",
+          "attendu": [],
+          "enfants": []
+        }
+      ]
+    }
+  ]
+}
