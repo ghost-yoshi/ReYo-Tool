@@ -1,0 +1,4 @@
+fastapi==0.162.5
+pydantic==2.14.2
+python-docx==1.2.0
+uvicorn==0.54.0

@@ -1,0 +1,17 @@
+.venv
+.git
+.env
+**/__pycache__
+**/*.pyc
+
+# tests et fichiers de démo
+tests
+test-generation.py
+capture.png
+demo.docx
+README.md
+
+# frontend
+frontend/node_modules
+frontend/dist
+frontend/.git
