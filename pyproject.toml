@@ -43,3 +43,7 @@ reyo = ["captures/*.png"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+
+
+[tool.vercel] 
+entrypoint = "src.reyo.api.main:app
