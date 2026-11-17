@@ -46,4 +46,4 @@ pythonpath = ["src"]
 
 
 [tool.vercel] 
-entrypoint = "src.reyo.api.main:app
+entrypoint = "src.reyo.api.main:app"
