@@ -45,5 +45,10 @@ testpaths = ["tests"]
 pythonpath = ["src"]
 
 
-[tool.vercel] 
-entrypoint = "src.reyo.api.main:app"
+[tool.vercel]
+# app.py ajoute src/ à sys.path avant d'importer le paquet reyo.
+entrypoint = "app:app"
+
+[tool.vercel.scripts]
+# Compile le frontend (SPA) dans ./static : Vercel ne passe pas par le Dockerfile.
+build = "python build.py"
