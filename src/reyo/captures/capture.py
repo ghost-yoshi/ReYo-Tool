@@ -10,6 +10,10 @@ implémentatoin de la classe capture. la méthode principale est depuis octetes 
 
 FORMATS_ACCEPTES = {"PNG": "png", "JPEG": "jpeg", "WEBP": "webp"}
 TAILLE_MAX = 10 * 1024 * 1024  # 10 Mo
+# Un petit fichier peut décrire une image gigantesque (« decompression bomb ») :
+# la limite porte donc aussi sur le nombre de pixels, pas seulement sur les octets.
+MAX_PIXELS = 40_000_000  # 40 Mpx
+Image.MAX_IMAGE_PIXELS = MAX_PIXELS
 
 
 class CaptureInvalide(Exception):
@@ -19,16 +23,28 @@ class CaptureInvalide(Exception):
 
 
 def _imageAnalyzer(octets: bytes) -> tuple[str, int, int]:
-    """ Renvoie (format, largeur, hauteur) ou leve une exceptoin"""
+    """Renvoie (format, largeur, hauteur) ou lève une CaptureInvalide.
+
+    La résolution est contrôlée avant tout décodage complet : c'est là que se
+    joue la protection contre les images qui explosent en mémoire.
+    """
     try:
         with Image.open(BytesIO(octets)) as img:
-            img.verify()
-        with Image.open(BytesIO(octets)) as img: 
             raw_format = img.format
             largeur, hauteur = img.size
-    except UnidentifiedImageError as e :
-        raise CaptureInvalide("FORMAT_NON_SUPPORTE", "ce fichier n'est pas pas une image reconnu")
-    except OSError as e :
+            if largeur * hauteur > MAX_PIXELS:
+                raise CaptureInvalide(
+                    "IMAGE_TROP_GRANDE",
+                    f"L'image fait {largeur}×{hauteur} pixels, au-delà de la limite de {MAX_PIXELS} pixels.",
+                )
+            img.verify()
+    except Image.DecompressionBombError as e:
+        raise CaptureInvalide(
+            "IMAGE_TROP_GRANDE", "La résolution de l'image dépasse la limite autorisée."
+        ) from e
+    except UnidentifiedImageError as e:
+        raise CaptureInvalide("FORMAT_NON_SUPPORTE", "ce fichier n'est pas une image reconnue") from e
+    except OSError as e:
         raise CaptureInvalide("IMAGE_ILLISIBLE", "l'image semble corrompue.") from e
 
     if raw_format not in FORMATS_ACCEPTES:

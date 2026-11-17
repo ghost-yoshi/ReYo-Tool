@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import unicodedata
@@ -19,6 +20,70 @@ from reyo.render.renderer_docx import DocxRenderer
 from fastapi.middleware.cors import CORSMiddleware
 
 #utils
+
+
+MAX_CORPS_OCTETS = 2 * 1024 * 1024  # 2 Mio
+
+
+async def _reponse_413(send) -> None:
+    corps = json.dumps({"detail": "Requête trop volumineuse (2 Mio maximum)."}).encode()
+    await send(
+        {
+            "type": "http.response.start",
+            "status": 413,
+            "headers": [
+                (b"content-type", b"application/json"),
+                (b"content-length", str(len(corps)).encode()),
+            ],
+        }
+    )
+    await send({"type": "http.response.body", "body": corps})
+
+
+class LimiteurTailleCorps:
+    """Refuse en 413 les corps de requête au-delà de `max_octets`.
+
+    Le corps est tamponné jusqu'à la limite puis rejoué à l'application : inutile
+    de laisser FastAPI désérialiser plusieurs mégaoctets pour rien. La limite est
+    globale ; un futur endpoint d'upload de captures aura besoin de la sienne.
+    """
+
+    def __init__(self, app, max_octets: int = MAX_CORPS_OCTETS) -> None:
+        self.app = app
+        self.max_octets = max_octets
+
+    async def __call__(self, scope, receive, send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        annonce = dict(scope.get("headers") or []).get(b"content-length")
+        if annonce and annonce.isdigit() and int(annonce) > self.max_octets:
+            await _reponse_413(send)
+            return
+
+        corps = bytearray()
+        while True:
+            message = await receive()
+            if message["type"] == "http.disconnect":
+                return
+            corps.extend(message.get("body", b""))
+            if len(corps) > self.max_octets:
+                await _reponse_413(send)
+                return
+            if not message.get("more_body", False):
+                break
+
+        envoye = False
+
+        async def receive_rejoue():
+            nonlocal envoye
+            if envoye:
+                return await receive()
+            envoye = True
+            return {"type": "http.request", "body": bytes(corps), "more_body": False}
+
+        await self.app(scope, receive_rejoue, send)
 
 
 def _origines_autorisees(valeur: str | None = None) -> list[str]:
@@ -45,6 +110,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(LimiteurTailleCorps, max_octets=MAX_CORPS_OCTETS)
 
 # Toutes les routes métier vivent sous /api, ce qui correspond au VITE_REYO_API_URL
 # utilisé pour compiler le frontend (Dockerfile).

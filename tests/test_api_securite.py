@@ -9,6 +9,7 @@ from reyo.api.main import (
     _origines_autorisees,
     app,
 )
+from reyo.schema import MAX_NOEUDS, MAX_PROFONDEUR
 
 FIXTURE = Path(__file__).parent / "fixtures" / "testv1.json"
 
@@ -43,6 +44,44 @@ def test_render_neutralise_un_nom_de_fichier_malicieux():
         'attachment; filename="ra_pport__X-Injected__oui.docx"; '
         "filename*=UTF-8''ra_pport__X-Injected_%20oui.docx"
     )
+
+
+def test_render_refuse_un_arbre_trop_grand():
+    structure = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    structure["noeuds"] = [
+        {"id": f"n{i}", "type": "info", "enonce": "x", "attendu": [], "enfants": []}
+        for i in range(MAX_NOEUDS + 1)
+    ]
+
+    reponse = TestClient(app).post(
+        "/api/render", json={"structure": structure, "theme": "academic"}
+    )
+    assert reponse.status_code == 422
+
+
+def test_render_refuse_un_arbre_trop_profond():
+    structure = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    racine = {"id": "r", "type": "info", "enonce": "x", "attendu": [], "enfants": []}
+    structure["noeuds"] = [racine]
+    courant = racine
+    for index in range(MAX_PROFONDEUR + 5):
+        enfant = {"id": f"p{index}", "type": "info", "enonce": "x", "attendu": [], "enfants": []}
+        courant["enfants"] = [enfant]
+        courant = enfant
+
+    reponse = TestClient(app).post(
+        "/api/render", json={"structure": structure, "theme": "academic"}
+    )
+    assert reponse.status_code == 422
+
+
+def test_corps_trop_volumineux_refuse():
+    reponse = TestClient(app).post(
+        "/api/render",
+        content=b"{" + b" " * (3 * 1024 * 1024) + b"}",
+        headers={"content-type": "application/json"},
+    )
+    assert reponse.status_code == 413
 
 
 def test_origines_cors_jamais_wildcard():

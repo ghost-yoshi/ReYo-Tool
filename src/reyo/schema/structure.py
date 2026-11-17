@@ -1,6 +1,46 @@
 from enum import Enum
-from typing import Literal
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from typing import Any, Literal
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+MAX_NOEUDS = 2000
+MAX_PROFONDEUR = 50
+
+
+def bornes_structure(donnees: object) -> list[str]:
+    """Contrôle itératif du JSON brut : bornes de taille avant tout parsing récursif.
+
+    Pydantic valide les nœuds en profondeur : un JSON très profond ferait échouer
+    la récursion avant qu'on puisse mesurer quoi que ce soit. Ce contrôle parcourt
+    donc le dictionnaire avec une pile explicite.
+    """
+    if not isinstance(donnees, dict):
+        return []  # le schéma signalera la racine non conforme
+
+    erreurs: list[str] = []
+    racine = donnees.get("noeuds")
+    if not isinstance(racine, list):
+        return []
+
+    total = 0
+    profondeur_max = 0
+    pile: list[tuple[Any, int]] = [(noeud, 1) for noeud in racine]
+    while pile:
+        noeud, profondeur = pile.pop()
+        total += 1
+        profondeur_max = max(profondeur_max, profondeur)
+        if total > MAX_NOEUDS:
+            erreurs.append(f"noeuds : plus de {MAX_NOEUDS} nœuds au total.")
+            break
+        if not isinstance(noeud, dict):
+            continue
+        enfants = noeud.get("enfants")
+        if isinstance(enfants, list):
+            pile.extend((enfant, profondeur + 1) for enfant in enfants)
+
+    if profondeur_max > MAX_PROFONDEUR:
+        erreurs.append(f"noeuds : profondeur {profondeur_max} supérieure à la limite de {MAX_PROFONDEUR}.")
+    return erreurs
 
 
 class TypeNoeud(str, Enum):
@@ -61,6 +101,15 @@ class Structure(_Base):
     meta: Meta
     regles_rendu: ReglesRendu = Field(default_factory=ReglesRendu)
     noeuds: list[Noeud]
+
+    @model_validator(mode="before")
+    @classmethod
+    def _borner_arbre(cls, donnees: object) -> object:
+        """Refuse un arbre démesuré avant que Pydantic ne le parcoure récursivement."""
+        erreurs = bornes_structure(donnees)
+        if erreurs:
+            raise ValueError(" ".join(erreurs))
+        return donnees
 
 
 if __name__ =="__main__":

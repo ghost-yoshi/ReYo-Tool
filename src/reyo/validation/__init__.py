@@ -9,9 +9,7 @@ from dataclasses import dataclass, field
 
 from pydantic import ValidationError
 
-from reyo.schema import Noeud, Structure
-
-MAX_PROFONDEUR = 50
+from reyo.schema import MAX_PROFONDEUR, Noeud, Structure
 
 
 @dataclass(frozen=True)
