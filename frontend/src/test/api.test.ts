@@ -1,0 +1,15 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { detailMessages, filenameFromDisposition } from "@/lib/api";
+import { example } from "@/lib/structure";
+
+afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.useRealTimers(); vi.resetModules(); });
+describe("API contract", () => {
+  it("formats 422 paths and string details", () => { expect(detailMessages([{ loc: ["body", "structure", "noeuds", 0], msg: "Field required" }])).toEqual(["body > structure > noeuds > 0 : Field required"]); expect(detailMessages("Invalid structure")).toEqual(["Invalid structure"]); });
+  it("downloads using Content-Disposition with fallback", () => { expect(filenameFromDisposition('attachment; filename="mon_tp.docx"')).toBe("mon_tp.docx"); expect(filenameFromDisposition("attachment; filename*=UTF-8''r%C3%A9seaux.docx")).toBe("réseaux.docx"); expect(filenameFromDisposition(null)).toBe("compte_rendu.docx"); });
+  it("keeps generate disabled by default without requests", async () => { vi.stubEnv("VITE_ENABLE_GENERATE", "false"); const fetch = vi.fn(); vi.stubGlobal("fetch", fetch); const { api } = await import("@/lib/api"); await expect(api.generate(new File([""], "tp.pdf"))).rejects.toThrow("Bientôt disponible"); expect(fetch).not.toHaveBeenCalled(); });
+  it("uses a 30 second timeout", async () => { vi.useFakeTimers(); vi.stubEnv("VITE_REYO_API_URL", "https://reyo.example"); vi.stubGlobal("fetch", vi.fn((_url, options) => new Promise((_resolve, reject) => options.signal.addEventListener("abort", () => reject(new Error("aborted")))))); const { api } = await import("@/lib/api"); const pending = expect(api.health()).rejects.toThrow("Délai dépassé (30 s)"); await vi.advanceTimersByTimeAsync(30_000); await pending; });
+  it("returns network failures clearly", async () => { vi.stubEnv("VITE_REYO_API_URL", "https://reyo.example"); vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Network"))); const { api } = await import("@/lib/api"); await expect(api.health()).rejects.toThrow("Impossible de joindre le service"); });
+  it("posts structure and theme and reads binary Word content", async () => { vi.stubEnv("VITE_REYO_API_URL", "https://reyo.example/"); const blob = new Blob(["word-content"]); const fetch = vi.fn().mockResolvedValue({ ok: true, blob: async () => blob, headers: new Headers({ "Content-Disposition": 'attachment; filename="tp.docx"' }) }); vi.stubGlobal("fetch", fetch); const { api } = await import("@/lib/api"); expect(await api.render(example, "academic")).toEqual({ blob, filename: "tp.docx" }); expect(fetch).toHaveBeenCalledWith("https://reyo.example/render", expect.objectContaining({ method: "POST", body: JSON.stringify({ structure: example, theme: "academic" }) })); });
+});describe("themes response", () => {
+  it("accepts a key → name map", async () => { const { normalizeThemes } = await import("@/lib/api"); const t = normalizeThemes({ academic: "Academic Clean", litteraire: "Littéraire (Garamond)" }); expect(t["academic"]?.nom).toBe("Academic Clean"); expect(t["litteraire"]?.police_principale).toBe("Garamond"); });
+});

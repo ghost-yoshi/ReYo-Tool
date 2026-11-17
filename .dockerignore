@@ -1,8 +1,14 @@
 .venv
 .git
 .env
+frontend/.env
+frontend/.env.*
+frontend/.git
+frontend/.git.embedded-backup
 **/__pycache__
 **/*.pyc
+.pytest_cache
+static
 
 # tests et fichiers de démo
 tests
@@ -10,8 +16,10 @@ test-generation.py
 capture.png
 demo.docx
 README.md
+requirements-dev.txt
 
 # frontend
 frontend/node_modules
 frontend/dist
+frontend/.output
 frontend/.git

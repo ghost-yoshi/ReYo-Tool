@@ -1,4 +1,6 @@
 fastapi==0.162.5
+pillow==13.0.0
 pydantic==2.14.2
 python-docx==1.2.0
+python-multipart==0.0.34
 uvicorn==0.54.0
