@@ -18,6 +18,13 @@ def test_structure_valide():
     assert s.noeuds[0].enfants[0].id == "P4.3"
 
 
+def test_code_ue_numerique_converti_en_texte():
+    donnees = charger()
+    assert isinstance(donnees["meta"]["code_ue"], int)
+    s = Structure.model_validate(donnees)
+    assert s.meta.code_ue == str(donnees["meta"]["code_ue"])
+
+
 def test_type_inconnu():
     donnees = charger()
     donnees["noeuds"][0]["type"] = "exercice"

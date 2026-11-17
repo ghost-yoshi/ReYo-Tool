@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import Literal
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class TypeNoeud(str, Enum):
@@ -25,6 +25,23 @@ class Meta(_Base):
     code_ue: str
     titre: str
     enseignant: str | None = None
+
+    @field_validator("code_ue", mode="before")
+    @classmethod
+    def _code_ue_en_texte(cls, valeur: object) -> object:
+        """Accepte un code UE numérique (331) : une IA le renvoie souvent sans guillemets.
+
+        Les autres champs de `meta` restent stricts : une erreur de type y est
+        révélatrice, alors qu'un code UE est un identifiant dont le type n'a pas
+        de sens pour l'utilisateur. Un booléen n'est pas converti.
+        """
+        if isinstance(valeur, bool):
+            return valeur
+        if isinstance(valeur, int):
+            return str(valeur)
+        if isinstance(valeur, float):
+            return str(int(valeur)) if valeur.is_integer() else str(valeur)
+        return valeur
 
 class ReglesRendu(_Base):
     entete: list[str] = Field(default_factory=list)
