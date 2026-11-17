@@ -7,6 +7,8 @@ from reyo.api.main import (
     _entete_telechargement,
     _nom_fichier_sur,
     _origines_autorisees,
+    _page_accueil,
+    _repertoire_static,
     app,
 )
 from reyo.schema import MAX_NOEUDS, MAX_PROFONDEUR
@@ -82,6 +84,23 @@ def test_corps_trop_volumineux_refuse():
         headers={"content-type": "application/json"},
     )
     assert reponse.status_code == 413
+
+
+def test_repertoire_static_respecte_la_variable_env(monkeypatch, tmp_path):
+    monkeypatch.setenv("REYO_STATIC_DIR", str(tmp_path))
+    assert _repertoire_static() == tmp_path
+
+
+def test_page_accueil_prefere_index_puis_la_coquille_spa(tmp_path):
+    assert _page_accueil(tmp_path) is None
+
+    coquille = tmp_path / "_shell.html"
+    coquille.write_text("<!doctype html>", encoding="utf-8")
+    assert _page_accueil(tmp_path) == coquille
+
+    index = tmp_path / "index.html"
+    index.write_text("<!doctype html>", encoding="utf-8")
+    assert _page_accueil(tmp_path) == index
 
 
 def test_origines_cors_jamais_wildcard():

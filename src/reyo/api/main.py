@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import re
 import unicodedata
@@ -8,7 +9,7 @@ from typing import Any
 from urllib.parse import quote
 
 from fastapi import APIRouter, FastAPI, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -21,6 +22,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 #utils
 
+
+logger = logging.getLogger(__name__)
 
 MAX_CORPS_OCTETS = 2 * 1024 * 1024  # 2 Mio
 
@@ -225,9 +228,42 @@ def render(req: RenderRequest):
 
 app.include_router(router)
 
-# Le frontend compilé (frontend/dist copié dans ./static par le Dockerfile) est servi à
-# la racine. Le montage vient en dernier : les routes /api définies plus haut restent
-# prioritaires. Hors conteneur (dev local) le dossier n'existe pas, on ne monte rien.
-_REPERTOIRE_STATIQUE = Path(__file__).resolve().parents[3] / "static"
-if _REPERTOIRE_STATIQUE.is_dir():
+
+def _repertoire_static() -> Path | None:
+    """Dossier du front compilé : REYO_STATIC_DIR, ./static (conteneur), ou le build local."""
+    candidats: list[Path] = []
+    if variable := os.getenv("REYO_STATIC_DIR", "").strip():
+        candidats.append(Path(variable))
+    racine = Path(__file__).resolve().parents[3]
+    candidats += [racine / "static", racine / "frontend" / ".output" / "public"]
+    return next((candidat for candidat in candidats if candidat.is_dir()), None)
+
+
+def _page_accueil(repertoire: Path) -> Path | None:
+    """index.html si présent, sinon la coquille SPA produite par le build TanStack Start."""
+    for nom in ("index.html", "_shell.html"):
+        page = repertoire / nom
+        if page.is_file():
+            return page
+    return None
+
+
+# Le frontend compilé est servi à la racine ; les routes /api et la documentation,
+# déclarées plus haut, restent prioritaires. Sans build, l'accueil renvoie un 404 JSON.
+_REPERTOIRE_STATIQUE = _repertoire_static()
+_PAGE_ACCUEIL = _page_accueil(_REPERTOIRE_STATIQUE) if _REPERTOIRE_STATIQUE else None
+
+if _PAGE_ACCUEIL is not None:
+
+    @app.get("/", include_in_schema=False)
+    def page_accueil() -> FileResponse:
+        return FileResponse(_PAGE_ACCUEIL, media_type="text/html")
+
+else:
+    logger.warning(
+        "Aucun build du frontend trouvé : / ne servira pas l'interface. "
+        "Lancez `npm --prefix frontend run build` ou renseignez REYO_STATIC_DIR."
+    )
+
+if _REPERTOIRE_STATIQUE is not None:
     app.mount("/", StaticFiles(directory=_REPERTOIRE_STATIQUE, html=True), name="static")
