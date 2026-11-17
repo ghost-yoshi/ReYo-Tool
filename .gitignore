@@ -1,8 +1,13 @@
 .venv
 .gitignore
 __pycache__/
+*.py[cod]
 *.egg-info/
 .pytest_cache/
+
+# documents générés et verrous d'édition
+*.docx
+.~lock.*#
 
 # artefacts de build (dist frontend copié par le Dockerfile)
 static/
