@@ -1,6 +1,10 @@
+import os
+import re
+import unicodedata
 from io import BytesIO
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
@@ -17,13 +21,29 @@ from fastapi.middleware.cors import CORSMiddleware
 #utils
 
 
+def _origines_autorisees(valeur: str | None = None) -> list[str]:
+    """Origines autorisées, fournies par REYO_CORS_ORIGINS (séparées par des virgules).
+
+    La liste ne contient jamais "*" : le wildcard est interdit dès que des
+    credentials sont autorisés, et Starlette le remplacerait par un reflet de
+    l'origine appelante, ce qui revient à ouvrir l'API à tout site.
+    """
+    brute = os.getenv("REYO_CORS_ORIGINS", "") if valeur is None else valeur
+    return [origine.strip().rstrip("/") for origine in brute.split(",") if origine.strip()]
+
+
+_ORIGINES_CORS = _origines_autorisees()
+
 app = FastAPI(title="ReYo")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En dev, "*" autorise tout le monde. En prod, mets ["http://localhost:8080"]
-    allow_credentials=True,
-    allow_methods=["*"],  # Autorise GET, POST, OPTIONS, etc.
-    allow_headers=["*"],  # Autorise tous les en-têtes
+    allow_origins=_ORIGINES_CORS,
+    # En conteneur le front est servi par ce même service (même origine, pas de CORS).
+    # En développement il vient de Vite, d'où l'autorisation des hôtes locaux.
+    allow_origin_regex=r"^http://(localhost|127\.0\.0\.1)(:\d+)?$",
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Toutes les routes métier vivent sous /api, ce qui correspond au VITE_REYO_API_URL
@@ -96,6 +116,32 @@ def health_racine() -> dict[str, str]:
     return _etat_service()
 
 
+_CARACTERES_DANGEREUX = re.compile(r'[\x00-\x1f\x7f"\\/:*?<>|]')
+_CARACTERES_ASCII = re.compile(r"[^A-Za-z0-9._-]")
+_LONGUEUR_MAX_TIGE = 100
+
+
+def _nom_fichier_sur(chemin: Path) -> str:
+    """Nom de fichier utilisable dans un en-tête : pas de CR/LF, de guillemet ni de chemin.
+
+    Le nom vient du JSON produit par l'IA (`regles_rendu.filename`), donc d'une source
+    non digne de confiance : il ne doit jamais pouvoir casser l'en-tête HTTP.
+    """
+    nom = Path(chemin).name
+    nom = _CARACTERES_DANGEREUX.sub("_", nom).strip(" ._") or "compte_rendu.docx"
+    tige = nom[:-5] if nom.lower().endswith(".docx") else nom
+    return f"{(tige.strip(' ._') or 'compte_rendu')[:_LONGUEUR_MAX_TIGE]}.docx"
+
+
+def _entete_telechargement(nom: str) -> str:
+    """En-tête RFC 6266 : repli ASCII pour les vieux clients + nom exact en filename*."""
+    ascii_nom = unicodedata.normalize("NFKD", nom).encode("ascii", "ignore").decode()
+    ascii_nom = _CARACTERES_ASCII.sub("_", ascii_nom).strip(" ._") or "compte_rendu"
+    if not ascii_nom.lower().endswith(".docx"):
+        ascii_nom = f"{ascii_nom}.docx"
+    return f'attachment; filename="{ascii_nom}"; filename*=UTF-8\'\'{quote(nom)}'
+
+
 @router.post("/render")
 def render(req: RenderRequest):
     if req.theme not in THEMES_PREDEFINIS:
@@ -105,8 +151,9 @@ def render(req: RenderRequest):
     return StreamingResponse(
         BytesIO(buf),
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        headers={"Content-Disposition": f'attachment; filename="{r.filename.name}"'},
-
+        headers={
+            "Content-Disposition": _entete_telechargement(_nom_fichier_sur(r.filename))
+        },
     )
 
 
